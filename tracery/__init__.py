@@ -16,11 +16,11 @@ class NodeType(Enum):
     ACTION = 2
 
 
-class Node(object):
+class Node:
 
     regexp = re.compile(r"\(([^)]+)\)")
 
-    def __init__(self, parent, child_index, settings):
+    def __init__(self, parent: Union[Grammar,Node], child_index: int, settings: Dict) -> None:
         self.errors = []
         if settings.get("raw", None) is None:
             self.errors.append("Empty input for node")
@@ -39,7 +39,7 @@ class Node(object):
         self.type = settings.get("type", None)
         self.is_expanded = False
 
-    def expand_children(self, child_rule, prevent_recursion=False):
+    def expand_children(self, child_rule: str, prevent_recursion: bool =False) -> None:
         self.children = []
         self.finished_text = ""
 
@@ -56,7 +56,7 @@ class Node(object):
         else:
             self.errors.append("No child rule provided, can't expand children")
 
-    def expand(self, prevent_recursion=False):
+    def expand(self, prevent_recursion=False) -> None:
         if not self.is_expanded:
             self.is_expanded = True
             # self.expansion_errors = [] # unused
@@ -111,11 +111,9 @@ class Node(object):
                 self.action = NodeAction(self, self.raw)
                 self.action.activate()
                 self.finished_text = ""
-            else:
-                breakpoint()
-                ...
 
-    def clear_escape_chars(self):
+
+    def clear_escape_chars(self) -> None:
         self.finished_text = (
             self.finished_text.replace("\\\\", "DOUBLEBACKSLASH")
             .replace("\\", "")
@@ -132,8 +130,8 @@ class ActionType(Enum):
     FUNCTION = 2  # [function(param0,param1)]
 
 
-class NodeAction(object):  # has a 'raw' attribute
-    def __init__(self, node, raw):
+class NodeAction:  # has a 'raw' attribute
+    def __init__(self, node: Node, raw: str) -> None:
         self.node = node
         sections = raw.split(":")
         self.target = sections[0]
@@ -146,17 +144,17 @@ class NodeAction(object):  # has a 'raw' attribute
             else:
                 self.type = ActionType.PUSH
 
-    def create_undo(self):
+    def create_undo(self) -> Optional[NodeAction]:
         if self.type == ActionType.PUSH:
             return NodeAction(self.node, self.target + ":POP")
         return None
 
-    def activate(self):
+    def activate(self) -> None:
         grammar = self.node.grammar
         if self.type == ActionType.PUSH:
             self.rule_sections = self.rule.split(",")
             self.finished_rules = []
-            self.rule_nodes = []
+            #self.rule_nodes: List[Node] = [] unused
             for rule_section in self.rule_sections:
                 n = Node(grammar, 0, {"type": NodeType.RAW, "raw": rule_section})
                 n.expand()
@@ -167,15 +165,15 @@ class NodeAction(object):  # has a 'raw' attribute
         elif self.type == ActionType.FUNCTION:
             grammar.flatten(self.target, True)
 
-    def __repr__(self):
-        return f"{self.__class__}{self.type}('{self.node}' {self.raw})"
+    def __repr__(self) -> str:
+        return f"{self.__class__}{self.type}('{self.node}' {self.target})"
 
 
 class RuleSet(object):
-    def __init__(self, grammar, raw):
+    def __init__(self, grammar: Grammar, raw: Union[List[str],str]) -> None:
         self.raw = raw
         self.grammar = grammar
-        self.default_uses = []
+        # self.default_uses = [] not used
         if isinstance(raw, list):
             self.default_rules = raw
         elif isinstance(raw, basestring):
@@ -183,37 +181,38 @@ class RuleSet(object):
         else:
             self.default_rules = []
 
-    def select_rule(self):
+    def select_rule(self) -> str:
         # in kate's code there's a bunch of stuff for different methods of
         # selecting a rule, none of which seem to be implemented yet! so for
         # now I'm just going to ...
         return random.choice(self.default_rules)
 
-    def clear_state(self):
-        self.default_uses = []
+    def clear_state(self) -> None:
+        # self.default_uses = [] not used
+        pass
 
 
-class Symbol(object):
-    def __init__(self, grammar, key, raw_rules):
+class Symbol:
+    def __init__(self, grammar: Grammar, key: str, raw_rules: List[str]) -> None:
         self.grammar = grammar
         self.key = key
         self.raw_rules = raw_rules
         self.base_rules = RuleSet(grammar, raw_rules)
         self.clear_state()
 
-    def clear_state(self):
+    def clear_state(self) -> None:
         self.stack = [self.base_rules]
-        self.uses = []
+        self.uses: List[Dict] = []
         self.base_rules.clear_state()
 
-    def push_rules(self, raw_rules):
+    def push_rules(self, raw_rules) -> None:
         rules = RuleSet(self.grammar, raw_rules)
         self.stack.append(rules)
 
-    def pop_rules(self):
+    def pop_rules(self) -> None:
         self.stack.pop()
 
-    def select_rule(self, node, errors):
+    def select_rule(self, node, errors) -> str:
         self.uses.append({"node": node})
         if len(self.stack) == 0:
             errors.append(
@@ -221,40 +220,40 @@ class Symbol(object):
             )
         return self.stack[-1].select_rule()
 
-    def get_active_rules(self):
+    def get_active_rules(self) -> Optional[str]:
         if len(self.stack) == 0:
             return None
         return self.stack[-1].select_rule()
 
 
 class Grammar(object):
-    def __init__(self, raw, settings=None):
-        self.modifiers = {}
+    def __init__(self, raw: str, settings=None) -> None:
+        self.modifiers: Dict[str, Callable] = {}
         self.load_from_raw_obj(raw)
-        self.errors = []
+        self.errors: List[str] = []
         if settings is None:
-            self.settings = {}
+            self.settings: Dict[str, str] = {}
 
-    def clear_state(self):
+    def clear_state(self) -> None:
         for val in self.symbols.values():
             val.clear_state()
 
-    def add_modifiers(self, mods):
+    def add_modifiers(self, mods) -> None:
         # not sure what this is for yet
         for key in mods:
             self.modifiers[key] = mods[key]
 
-    def load_from_raw_obj(self, raw):
+    def load_from_raw_obj(self, raw) -> None:
         self.raw = raw
         self.symbols = dict()
-        self.subgrammars = list()
+        #self.subgrammars: = list() # unused
         if raw:
             self.symbols = dict((k, Symbol(self, k, v)) for k, v in raw.items())
 
-    def create_root(self, rule):
+    def create_root(self, rule: str) -> Node:
         return Node(self, 0, {"type": NodeType.RAW, "raw": rule})
 
-    def expand(self, rule, allow_escape_chars=False):
+    def expand(self, rule: str, allow_escape_chars: bool =False) -> Node:
         root = self.create_root(rule)
         root.expand()
         if not allow_escape_chars:
@@ -262,23 +261,23 @@ class Grammar(object):
         self.errors.extend(root.errors)
         return root
 
-    def flatten(self, rule, allow_escape_chars=False):
+    def flatten(self, rule: str, allow_escape_chars: bool =False) -> str:
         root = self.expand(rule, allow_escape_chars)
         return root.finished_text
 
-    def push_rules(self, key, raw_rules, source_action=None):
+    def push_rules(self, key: str, raw_rules: List[str], source_action=None):
         if key not in self.symbols:
             self.symbols[key] = Symbol(self, key, raw_rules)
         else:
             self.symbols[key].push_rules(raw_rules)
 
-    def pop_rules(self, key):
+    def pop_rules(self, key) -> None:
         if key not in self.symbols:
             self.errors.append("Can't pop: no symbol for key " + key)
         else:
             self.symbols[key].pop_rules()
 
-    def select_rule(self, key, node, errors):
+    def select_rule(self, key: str, node: Node, errors: List[str]) -> str:
         if key in self.symbols:
             return self.symbols[key].select_rule(node, errors)
         else:
@@ -288,7 +287,7 @@ class Grammar(object):
             return "((" + key + "))"
 
 
-def parse_tag(tag_contents):
+def parse_tag(tag_contents) -> Dict:
     """
     returns a dictionary with 'symbol', 'modifiers', 'preactions',
     'postactions'
@@ -311,7 +310,7 @@ def parse_tag(tag_contents):
     return parsed
 
 
-def parse(rule):
+def parse(rule) -> tuple[List,List]:
     depth = 0
     in_tag = False
     sections = list()
@@ -322,9 +321,9 @@ def parse(rule):
     last_escaped_char = None
 
     if rule is None:
-        return sections
+        return sections, errors
 
-    def create_section(start, end, type_):
+    def create_section(start: int, end: int, type_: NodeType) -> None:
         if end - start < 1:
             if type_ == NodeType.TAG:
                 errors.append(str(start) + ": empty tag")
