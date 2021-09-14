@@ -286,7 +286,7 @@ class TestModifiers(unittest.TestCase):
         output = modifiers.ed(text)
 
         self.assertEqual(output, "")
-        
+
     def test_ed_ends_in_non_e_and_non_y(self):
         # Arrange
         text = "jump"

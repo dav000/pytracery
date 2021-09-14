@@ -20,7 +20,9 @@ class Node:
 
     regexp = re.compile(r"\(([^)]+)\)")
 
-    def __init__(self, parent: Union[Grammar,Node], child_index: int, settings: Dict) -> None:
+    def __init__(
+        self, parent: Union[Grammar, Node], child_index: int, settings: Dict
+    ) -> None:
         self.errors = []
         if settings.get("raw", None) is None:
             self.errors.append("Empty input for node")
@@ -39,7 +41,7 @@ class Node:
         self.type = settings.get("type", None)
         self.is_expanded = False
 
-    def expand_children(self, child_rule: str, prevent_recursion: bool =False) -> None:
+    def expand_children(self, child_rule: str, prevent_recursion: bool = False) -> None:
         self.children = []
         self.finished_text = ""
 
@@ -112,7 +114,6 @@ class Node:
                 self.action.activate()
                 self.finished_text = ""
 
-
     def clear_escape_chars(self) -> None:
         self.finished_text = (
             self.finished_text.replace("\\\\", "DOUBLEBACKSLASH")
@@ -154,7 +155,7 @@ class NodeAction:  # has a 'raw' attribute
         if self.type == ActionType.PUSH:
             self.rule_sections = self.rule.split(",")
             self.finished_rules = []
-            #self.rule_nodes: List[Node] = [] unused
+            # self.rule_nodes: List[Node] = [] unused
             for rule_section in self.rule_sections:
                 n = Node(grammar, 0, {"type": NodeType.RAW, "raw": rule_section})
                 n.expand()
@@ -170,7 +171,7 @@ class NodeAction:  # has a 'raw' attribute
 
 
 class RuleSet(object):
-    def __init__(self, grammar: Grammar, raw: Union[List[str],str]) -> None:
+    def __init__(self, grammar: Grammar, raw: Union[List[str], str]) -> None:
         self.raw = raw
         self.grammar = grammar
         # self.default_uses = [] not used
@@ -246,14 +247,14 @@ class Grammar(object):
     def load_from_raw_obj(self, raw) -> None:
         self.raw = raw
         self.symbols = dict()
-        #self.subgrammars: = list() # unused
+        # self.subgrammars: = list() # unused
         if raw:
             self.symbols = dict((k, Symbol(self, k, v)) for k, v in raw.items())
 
     def create_root(self, rule: str) -> Node:
         return Node(self, 0, {"type": NodeType.RAW, "raw": rule})
 
-    def expand(self, rule: str, allow_escape_chars: bool =False) -> Node:
+    def expand(self, rule: str, allow_escape_chars: bool = False) -> Node:
         root = self.create_root(rule)
         root.expand()
         if not allow_escape_chars:
@@ -261,7 +262,7 @@ class Grammar(object):
         self.errors.extend(root.errors)
         return root
 
-    def flatten(self, rule: str, allow_escape_chars: bool =False) -> str:
+    def flatten(self, rule: str, allow_escape_chars: bool = False) -> str:
         root = self.expand(rule, allow_escape_chars)
         return root.finished_text
 
@@ -310,7 +311,7 @@ def parse_tag(tag_contents) -> Dict:
     return parsed
 
 
-def parse(rule) -> tuple[List,List]:
+def parse(rule) -> tuple[List, List]:
     depth = 0
     in_tag = False
     sections = list()
