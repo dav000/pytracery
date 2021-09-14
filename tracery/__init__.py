@@ -1,17 +1,23 @@
+from __future__ import annotations
+from typing import Callable, Dict, List, Optional, Union
+
+from enum import Enum
+
 import re
 import random
 
-try:
-    unicode = unicode
-except NameError:
-    # 'unicode' is undefined, must be Python 3
-    basestring = (str, bytes)
-else:
-    # 'unicode' exists, must be Python 2
-    basestring = basestring
+basestring = (str, bytes)
 
+class NodeType(Enum):
+    RAW = -1
+    TEXT = 0
+    TAG = 1
+    ACTION = 2
 
 class Node(object):
+    
+    regexp = re.compile(r"\(([^)]+)\)")
+
     def __init__(self, parent, child_index, settings):
         self.errors = []
         if settings.get('raw', None) is None:
@@ -51,7 +57,7 @@ class Node(object):
     def expand(self, prevent_recursion=False):
         if not self.is_expanded:
             self.is_expanded = True
-            self.expansion_errors = []
+            #self.expansion_errors = [] # unused
             # Types of nodes
             # -1: raw, needs parsing
             #  0: Plaintext
@@ -59,13 +65,13 @@ class Node(object):
             #     "#[pushTarget:pushRule]symbol.mod")
             #  2: Action ("[pushTarget:pushRule], [pushTarget:POP]",
             #     more in the future)
-            if self.type == -1:
+            if self.type == NodeType.RAW:
                 self.expand_children(self.raw, prevent_recursion)
 
-            elif self.type == 0:
+            elif self.type == NodeType.TEXT:
                 self.finished_text = self.raw
 
-            elif self.type == 1:
+            elif self.type == NodeType.TAG:
                 self.preactions = []
                 self.postactions = []
                 parsed = parse_tag(self.raw)
@@ -87,8 +93,7 @@ class Node(object):
                 for mod_name in self.modifiers:
                     mod_params = []
                     if mod_name.find('(') > 0:
-                        regexp = re.compile(r'\(([^)]+)\)')
-                        matches = regexp.findall(mod_name)
+                        matches = self.regexp.findall(mod_name)
                         if len(matches) > 0:
                             mod_params = matches[0].split(",")
                             mod_name = mod_name[:mod_name.find('(')]
@@ -99,11 +104,16 @@ class Node(object):
                     else:
                         self.finished_text = mod(self.finished_text,
                                                  *mod_params)
+                for postaction in self.postactions:
+                    postaction.activate()
 
-            elif self.type == 2:
+            elif self.type == NodeType.ACTION:
                 self.action = NodeAction(self, self.raw)
                 self.action.activate()
                 self.finished_text = ""
+            else:
+                breakpoint()
+                ...
 
     def clear_escape_chars(self):
         self.finished_text = self.finished_text.replace(
@@ -111,6 +121,14 @@ class Node(object):
                 "\\", "").replace(
                     "DOUBLEBACKSLASH", "\\")
 
+    def __repr__(self) -> str:
+        return f"{self.__class__}{self.type}('{self.raw}' d: {self.depth}')"
+
+
+class ActionType(Enum):
+    PUSH = 0 # [key:rule]
+    POP = 1 # [key:POP]
+    FUNCTION = 2 # [function(param0,param1)]
 
 class NodeAction(object):  # has a 'raw' attribute
     def __init__(self, node, raw):
@@ -118,36 +136,37 @@ class NodeAction(object):  # has a 'raw' attribute
         sections = raw.split(":")
         self.target = sections[0]
         if len(sections) == 1:
-            self.type = 2
+            self.type = ActionType.FUNCTION
         else:
             self.rule = sections[1]
             if self.rule == "POP":
-                self.type = 1
+                self.type = ActionType.POP
             else:
-                self.type = 0
+                self.type = ActionType.PUSH
 
     def create_undo(self):
-        if self.type == 0:
+        if self.type == ActionType.PUSH:
             return NodeAction(self.node, self.target + ":POP")
         return None
 
     def activate(self):
         grammar = self.node.grammar
-        if self.type == 0:
+        if self.type == ActionType.PUSH:
             self.rule_sections = self.rule.split(",")
             self.finished_rules = []
             self.rule_nodes = []
             for rule_section in self.rule_sections:
-                n = Node(grammar, 0, {'type': -1, 'raw': rule_section})
+                n = Node(grammar, 0, {'type': NodeType.RAW, 'raw': rule_section})
                 n.expand()
                 self.finished_rules.append(n.finished_text)
             grammar.push_rules(self.target, self.finished_rules, self)
-        elif self.type == 1:
+        elif self.type == ActionType.POP:
             grammar.pop_rules(self.target)
-        elif self.type == 2:
+        elif self.type == ActionType.FUNCTION:
             grammar.flatten(self.target, True)
 
-    def to_text(self): pass  # FIXME
+    def __repr__(self):
+        return f"{self.__class__}{self.type}('{self.node}' {self.raw})"
 
 
 class RuleSet(object):
@@ -231,7 +250,7 @@ class Grammar(object):
                 (k, Symbol(self, k, v)) for k, v in raw.items())
 
     def create_root(self, rule):
-        return Node(self, 0, {'type': -1, 'raw': rule})
+        return Node(self, 0, {'type': NodeType.RAW, 'raw': rule})
 
     def expand(self, rule, allow_escape_chars=False):
         root = self.create_root(rule)
@@ -280,7 +299,7 @@ def parse_tag(tag_contents):
     sections, errors = parse(tag_contents)
     symbol_section = None
     for section in sections:
-        if section['type'] == 0:
+        if section['type'] == NodeType.TEXT:
             if symbol_section is None:
                 symbol_section = section['raw']
             else:
@@ -309,9 +328,9 @@ def parse(rule):
 
     def create_section(start, end, type_):
         if end - start < 1:
-            if type_ == 1:
+            if type_ == NodeType.TAG:
                 errors.append(str(start) + ": empty tag")
-            elif type_ == 2:
+            elif type_ == NodeType.ACTION:
                 errors.append(str(start) + ": empty action")
         raw_substring = None
         if last_escaped_char is not None:
@@ -326,7 +345,7 @@ def parse(rule):
             if c == '[':
                 if depth == 0 and not in_tag:
                     if start < i:
-                        create_section(start, i, 0)
+                        create_section(start, i, NodeType.TEXT)
                         last_escaped_char = None
                         escaped_substring = ""
                     start = i + 1
@@ -334,20 +353,20 @@ def parse(rule):
             elif c == ']':
                 depth -= 1
                 if depth == 0 and not in_tag:
-                    create_section(start, i, 2)
+                    create_section(start, i, NodeType.ACTION)
                     last_escaped_char = None
                     escaped_substring = ""
                     start = i + 1
             elif c == '#':
                 if depth == 0:
                     if in_tag:
-                        create_section(start, i, 1)
+                        create_section(start, i, NodeType.TAG)
                         last_escaped_char = None
                         escaped_substring = ""
                         start = i + 1
                     else:
                         if start < i:
-                            create_section(start, i, 0)
+                            create_section(start, i, NodeType.TEXT)
                             last_escaped_char = None
                             escaped_substring = ""
                         start = i + 1
@@ -360,7 +379,7 @@ def parse(rule):
         else:
             escaped = False
     if start < len(rule):
-        create_section(start, len(rule), 0)
+        create_section(start, len(rule), NodeType.TEXT)
         last_escaped_char = None
         escaped_substring = ""
 
@@ -372,5 +391,5 @@ def parse(rule):
         errors.append("too many ]")
 
     sections = [s for s in sections
-                if not(s['type'] == 0 and len(s['raw']) == 0)]
+                if not(s['type'] == NodeType.TEXT and len(s['raw']) == 0)]
     return sections, errors
