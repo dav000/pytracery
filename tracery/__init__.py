@@ -158,7 +158,7 @@ class NodeAction:  # has a 'raw' attribute
                 n = Node(grammar, 0, {"type": NodeType.RAW, "raw": rule_section})
                 n.expand()
                 self.finished_rules.append(n.finished_text)
-            grammar.push_rules(self.target, self.finished_rules, self)
+            grammar.push_rules(self.target, self.finished_rules)
         elif self.type == ActionType.POP:
             grammar.pop_rules(self.target)
         elif self.type == ActionType.FUNCTION:
