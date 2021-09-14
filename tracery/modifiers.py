@@ -29,24 +29,22 @@ def firstS(text: str, *params: str) -> str:
 def s(text: str, *params: str) -> str:
     if text[-1] in "shxSHX":
         return text + "es"
-    elif text[-1] in "yY":
+    if text[-1] in "yY":
         if text[-2] not in "aeiouAEIOU":
             return text[:-1] + "ies"
         else:
             return text + "s"
-    else:
-        return text + "s"
+    return text + "s"
 
 
 def ed(text: str, *params: str) -> str:
     if len(text) > 0 and text[-1] in "eE":
         return text + "d"
-    elif len(text) > 1 and text[-1] in "yY" and text[-2] not in "aeiouAEIOU":
+    if len(text) > 1 and text[-1] in "yY" and text[-2] not in "aeiouAEIOU":
         return text[:-1] + "ied"
-    elif len(text) > 0:
+    if len(text) > 0:
         return text + "ed"
-    else:
-        return text
+    return text
 
 
 def uppercase(text: str, *params: str) -> str:

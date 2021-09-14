@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    with open(args.json) as data_file:
+    with open(args.json, "r", encoding="utf-8") as data_file:
         rules = json.load(data_file)
 
     grammar = tracery.Grammar(rules)

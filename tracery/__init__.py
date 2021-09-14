@@ -61,7 +61,6 @@ class Node:
     def expand(self, prevent_recursion=False) -> None:
         if not self.is_expanded:
             self.is_expanded = True
-            # self.expansion_errors = [] # unused
             # Types of nodes
             # -1: raw, needs parsing
             #  0: Plaintext
@@ -155,7 +154,6 @@ class NodeAction:  # has a 'raw' attribute
         if self.type == ActionType.PUSH:
             self.rule_sections = self.rule.split(",")
             self.finished_rules = []
-            # self.rule_nodes: List[Node] = [] unused
             for rule_section in self.rule_sections:
                 n = Node(grammar, 0, {"type": NodeType.RAW, "raw": rule_section})
                 n.expand()
@@ -170,7 +168,7 @@ class NodeAction:  # has a 'raw' attribute
         return f"{self.__class__}{self.type}('{self.node}' {self.target})"
 
 
-class RuleSet(object):
+class RuleSet:
     def __init__(self, grammar: Grammar, raw: Union[List[str], str]) -> None:
         self.raw = raw
         self.grammar = grammar
@@ -227,7 +225,7 @@ class Symbol:
         return self.stack[-1].select_rule()
 
 
-class Grammar(object):
+class Grammar:
     def __init__(self, raw: str, settings=None) -> None:
         self.modifiers: Dict[str, Callable] = {}
         self.load_from_raw_obj(raw)
@@ -246,8 +244,7 @@ class Grammar(object):
 
     def load_from_raw_obj(self, raw) -> None:
         self.raw = raw
-        self.symbols = dict()
-        # self.subgrammars: = list() # unused
+        self.symbols = {}
         if raw:
             self.symbols = dict((k, Symbol(self, k, v)) for k, v in raw.items())
 
@@ -266,7 +263,7 @@ class Grammar(object):
         root = self.expand(rule, allow_escape_chars)
         return root.finished_text
 
-    def push_rules(self, key: str, raw_rules: List[str], source_action=None):
+    def push_rules(self, key: str, raw_rules: List[str]) -> None:
         if key not in self.symbols:
             self.symbols[key] = Symbol(self, key, raw_rules)
         else:
@@ -294,7 +291,7 @@ def parse_tag(tag_contents) -> Dict:
     'postactions'
     """
     parsed = dict(symbol=None, preactions=[], postactions=[], modifiers=[])
-    sections, errors = parse(tag_contents)
+    sections, _ = parse(tag_contents)
     symbol_section = None
     for section in sections:
         if section["type"] == NodeType.TEXT:
@@ -314,7 +311,7 @@ def parse_tag(tag_contents) -> Dict:
 def parse(rule) -> tuple[List, List]:
     depth = 0
     in_tag = False
-    sections = list()
+    sections = []
     escaped = False
     errors = []
     start = 0
