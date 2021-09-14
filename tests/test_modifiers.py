@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 """
 Unit tests for pytracery
 """
@@ -8,14 +8,15 @@ import unittest
 
 import sys
 import os.path
+
 sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+)
 
 from tracery import modifiers
 
 
 class TestModifiers(unittest.TestCase):
-
     def test_replace(self):
         # Arrange
         text = "a big ship"
@@ -266,6 +267,26 @@ class TestModifiers(unittest.TestCase):
         # Assert
         self.assertEqual(output, "SHIMMied")
 
+    def test_ed_ends_in_vowel_y(self):
+        text = "SWAY"
+
+        output = modifiers.ed(text)
+
+        self.assertEqual(output, "SWAYed")
+
+    def test_ed_ends_in_vowel_y_lowercase(self):
+        text = "sway"
+
+        output = modifiers.ed(text)
+
+        self.assertEqual(output, "swayed")
+
+    def test_ed_empty(self):
+        text = ""
+        output = modifiers.ed(text)
+
+        self.assertEqual(output, "")
+        
     def test_ed_ends_in_non_e_and_non_y(self):
         # Arrange
         text = "jump"

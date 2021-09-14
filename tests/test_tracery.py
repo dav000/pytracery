@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 """
 Unit tests for pytracery
 """
@@ -8,46 +8,89 @@ import unittest
 
 import sys
 import os.path
+
 sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+)
 
 import tracery
 from tracery.modifiers import base_english
 
 
 test_grammar = {
-    'deepHash': ["\\#00FF00", "\\#FF00FF"],
-    'deeperHash': ["#deepHash#"],
-    'animal': ["bear", "cat", "dog", "fox", "giraffe", "hippopotamus"],
-    'mood': ["quiet", "morose", "gleeful", "happy", "bemused", "clever",
-             "jovial", "vexatious", "curious", "anxious", "obtuse", "serene",
-             "demure"],
-    'nonrecursiveStory': ["The #pet# went to the beach."],
-    'recursiveStory': [
+    "deepHash": ["\\#00FF00", "\\#FF00FF"],
+    "deeperHash": ["#deepHash#"],
+    "animal": ["bear", "cat", "dog", "fox", "giraffe", "hippopotamus"],
+    "mood": [
+        "quiet",
+        "morose",
+        "gleeful",
+        "happy",
+        "bemused",
+        "clever",
+        "jovial",
+        "vexatious",
+        "curious",
+        "anxious",
+        "obtuse",
+        "serene",
+        "demure",
+    ],
+    "nonrecursiveStory": ["The #pet# went to the beach."],
+    "recursiveStory": [
         "The #pet# opened a book about[pet:#mood# #animal#] #pet.a#. "
-        "#story#[pet:POP] The #pet# closed the book."],
-    'svgColor': ["rgb(120,180,120)", "rgb(240,140,40)", "rgb(150,45,55)",
-                 "rgb(150,145,125)", "rgb(220,215,195)", "rgb(120,250,190)"],
-    'svgStyle': ['style="fill:#svgColor#;stroke-width:3;stroke:#svgColor#"'],
-    "name": ["Cheri", "Fox", "Morgana", "Jedoo", "Brick", "Shadow", "Krox",
-             "Urga", "Zelph"],
-    "story": ["#hero.capitalize# was a great #occupation#, and this song "
-              "tells of #heroTheir# adventure. #hero.capitalize# #didStuff#, "
-              "then #heroThey# #didStuff#, then #heroThey# went home "
-              "to read a book."],
-    "monster": ["dragon", "ogre", "witch", "wizard", "goblin", "golem",
-                "giant", "sphinx", "warlord"],
+        "#story#[pet:POP] The #pet# closed the book."
+    ],
+    "svgColor": [
+        "rgb(120,180,120)",
+        "rgb(240,140,40)",
+        "rgb(150,45,55)",
+        "rgb(150,145,125)",
+        "rgb(220,215,195)",
+        "rgb(120,250,190)",
+    ],
+    "svgStyle": ['style="fill:#svgColor#;stroke-width:3;stroke:#svgColor#"'],
+    "name": [
+        "Cheri",
+        "Fox",
+        "Morgana",
+        "Jedoo",
+        "Brick",
+        "Shadow",
+        "Krox",
+        "Urga",
+        "Zelph",
+    ],
+    "story": [
+        "#hero.capitalize# was a great #occupation#, and this song "
+        "tells of #heroTheir# adventure. #hero.capitalize# #didStuff#, "
+        "then #heroThey# #didStuff#, then #heroThey# went home "
+        "to read a book."
+    ],
+    "monster": [
+        "dragon",
+        "ogre",
+        "witch",
+        "wizard",
+        "goblin",
+        "golem",
+        "giant",
+        "sphinx",
+        "warlord",
+    ],
     "setPronouns": [
         "[heroThey:they][heroThem:them][heroTheir:their][heroTheirs:theirs]",
         "[heroThey:she][heroThem:her][heroTheir:her][heroTheirs:hers]",
-        "[heroThey:he][heroThem:him][heroTheir:his][heroTheirs:his]"],
+        "[heroThey:he][heroThem:him][heroTheir:his][heroTheirs:his]",
+    ],
     "setOccupation": [
         "[occupation:baker][didStuff:baked bread,decorated cupcakes,"
         "folded dough,made croissants,iced a cake]",
         "[occupation:warrior][didStuff:fought #monster.a#,saved a village "
-        "from #monster.a#,battled #monster.a#,defeated #monster.a#]"],
-    "origin": ["#[#setPronouns#][#setOccupation#][hero:#name#]story#"]
-    }
+        "from #monster.a#,battled #monster.a#,defeated #monster.a#]",
+    ],
+    "origin": ["#[#setPronouns#][#setOccupation#][hero:#name#]story#"],
+}
 
 
 class TestPytracery(unittest.TestCase):
@@ -59,17 +102,14 @@ class TestPytracery(unittest.TestCase):
 
     def assert_starts_with(self, a, b, msg=None):
         self.assertTrue(
-            a.startswith(b),
-            msg or "{} does not start with {}".format(a, b))
+            a.startswith(b), msg or "{} does not start with {}".format(a, b)
+        )
 
     def assert_ends_with(self, a, b, msg=None):
-        self.assertTrue(
-            a.endswith(b),
-            msg or "{} does not end with {}".format(a, b))
+        self.assertTrue(a.endswith(b), msg or "{} does not end with {}".format(a, b))
 
 
 class TestBasics(TestPytracery):
-
     def test_plaintext_short(self):
         # Arrange
         src = "a"
@@ -83,11 +123,13 @@ class TestBasics(TestPytracery):
 
     def test_plaintext_long(self):
         # Arrange
-        src = ("Emma Woodhouse, handsome, clever, and rich, with a "
-               "comfortable home and happy disposition, seemed to unite some "
-               "of the best blessings of existence; and had lived nearly "
-               "twenty-one years in the world with very little to distress or "
-               "vex her.")
+        src = (
+            "Emma Woodhouse, handsome, clever, and rich, with a "
+            "comfortable home and happy disposition, seemed to unite some "
+            "of the best blessings of existence; and had lived nearly "
+            "twenty-one years in the world with very little to distress or "
+            "vex her."
+        )
 
         # Act
         ret = self.grammar.flatten(src)
@@ -99,12 +141,12 @@ class TestBasics(TestPytracery):
             "comfortable home and happy disposition, seemed to unite some "
             "of the best blessings of existence; and had lived nearly "
             "twenty-one years in the world with very little to distress or "
-            "vex her.")
+            "vex her.",
+        )
         self.assertEqual(self.grammar.errors, [])
 
 
 class TestEscapeChars(TestPytracery):
-
     def test_escape_character(self):
         # Arrange
         src = "\\#escape hash\\# and escape slash\\\\"
@@ -126,15 +168,18 @@ class TestEscapeChars(TestPytracery):
         # Assert
         self.assertIn(
             ret,
-            ["#00FF00  #00FF00",
-             "#00FF00  #FF00FF",
-             "#FF00FF  #00FF00",
-             "#FF00FF  #FF00FF"])
+            [
+                "#00FF00  #00FF00",
+                "#00FF00  #FF00FF",
+                "#FF00FF  #00FF00",
+                "#FF00FF  #FF00FF",
+            ],
+        )
         self.assertEqual(self.grammar.errors, [])
 
     def test_escape_quotes(self):
         # Arrange
-        src = "\"test\" and \'test\'"
+        src = "\"test\" and 'test'"
 
         # Act
         ret = self.grammar.flatten(src)
@@ -178,7 +223,7 @@ class TestEscapeChars(TestPytracery):
 
     def test_escape_melange1(self):
         # Arrange
-        src = "An action can have inner tags: \[key:\#rule\#\]"
+        src = r"An action can have inner tags: \[key:\#rule\#\]"
 
         # Act
         ret = self.grammar.flatten(src)
@@ -189,22 +234,22 @@ class TestEscapeChars(TestPytracery):
 
     def test_escape_melange2(self):
         # Arrange
-        src = ("A tag can have inner actions: "
-               "\"\\#\\[myName:\\#name\\#\\]story\\[myName:POP\\]\\#\"")
+        src = (
+            "A tag can have inner actions: "
+            '"\\#\\[myName:\\#name\\#\\]story\\[myName:POP\\]\\#"'
+        )
 
         # Act
         ret = self.grammar.flatten(src)
 
         # Assert
         self.assertEqual(
-            ret,
-            "A tag can have inner actions: "
-            "\"#[myName:#name#]story[myName:POP]#\"")
+            ret, "A tag can have inner actions: " '"#[myName:#name#]story[myName:POP]#"'
+        )
         self.assertEqual(self.grammar.errors, [])
 
 
 class TestWebSpecifics(TestPytracery):
-
     def test_emoji(self):
         # Arrange
         src = "💻🐋🌙🏄🍻"
@@ -213,9 +258,7 @@ class TestWebSpecifics(TestPytracery):
         ret = self.grammar.flatten(src)
 
         # Assert
-        self.assertEqual(
-            ret,
-            "\U0001f4bb\U0001f40b\U0001f319\U0001f3c4\U0001f37b")
+        self.assertEqual(ret, "\U0001f4bb\U0001f40b\U0001f319\U0001f3c4\U0001f37b")
         self.assertEqual(self.grammar.errors, [])
 
     def test_unicode(self):
@@ -232,8 +275,8 @@ class TestWebSpecifics(TestPytracery):
     def test_unicode_rule_not_found(self):
         # Arrange
         rules = {
-            'origin': '#пправило#',
-            'rule not found': 'something',
+            "origin": "#пправило#",
+            "rule not found": "something",
         }
         grammar_rule_not_found = tracery.Grammar(rules)
 
@@ -242,15 +285,16 @@ class TestWebSpecifics(TestPytracery):
 
         # Assert
         self.assertEqual(ret, "((пправило))")
-        self.assertEqual(grammar_rule_not_found.errors,
-                         ["No symbol for пправило"])
+        self.assertEqual(grammar_rule_not_found.errors, ["No symbol for пправило"])
 
     def test_svg(self):
         # Arrange
-        src = ('<svg width="100" height="70">'
-               '<rect x="0" y="0" width="100" height="100" #svgStyle#/> '
-               '<rect x="20" y="10" width="40" height="30" #svgStyle#/>'
-               '</svg>')
+        src = (
+            '<svg width="100" height="70">'
+            '<rect x="0" y="0" width="100" height="100" #svgStyle#/> '
+            '<rect x="20" y="10" width="40" height="30" #svgStyle#/>'
+            "</svg>"
+        )
 
         # Act
         ret = self.grammar.flatten(src)
@@ -259,14 +303,14 @@ class TestWebSpecifics(TestPytracery):
         self.assert_starts_with(
             ret,
             '<svg width="100" height="70">'
-            '<rect x="0" y="0" width="100" height="100" style="fill:rgb(')
+            '<rect x="0" y="0" width="100" height="100" style="fill:rgb(',
+        )
         self.assertIn('/> <rect x="20" y="10" width="40" height="30" ', ret)
         self.assert_ends_with(ret, '"/></svg>')
         self.assertEqual(self.grammar.errors, [])
 
 
 class TestPush(TestPytracery):
-
     def test_push_basic(self):
         # Arrange
         src = "[pet:#animal#]You have a #pet#. Your #pet# is #mood#."
@@ -282,8 +326,10 @@ class TestPush(TestPytracery):
 
     def test_push_pop(self):
         # Arrange
-        src = ("[pet:#animal#]You have a #pet#. [pet:#animal#]Pet:#pet# "
-               "[pet:POP]Pet:#pet#")
+        src = (
+            "[pet:#animal#]You have a #pet#. [pet:#animal#]Pet:#pet# "
+            "[pet:POP]Pet:#pet#"
+        )
 
         # Act
         ret = self.grammar.flatten(src)
@@ -329,8 +375,10 @@ class TestPush(TestPytracery):
 
     def test_modifier_with_params(self):
         # Arrange
-        src = ("[pet:#animal#]#nonrecursiveStory# -> #nonrecursiveStory"
-               ".replace(beach,mall)#")
+        src = (
+            "[pet:#animal#]#nonrecursiveStory# -> #nonrecursiveStory"
+            ".replace(beach,mall)#"
+        )
 
         # Act
         ret = self.grammar.flatten(src)
@@ -352,22 +400,28 @@ class TestPush(TestPytracery):
         self.assert_ends_with(ret, " closed the book.")
         self.assertEqual(
             self.grammar.errors,
-            ['No symbol for hero', 'No symbol for occupation',
-             'No symbol for heroTheir', 'No symbol for hero',
-             'No symbol for didStuff', 'No symbol for heroThey',
-             'No symbol for didStuff', 'No symbol for heroThey'])
+            [
+                "No symbol for hero",
+                "No symbol for occupation",
+                "No symbol for heroTheir",
+                "No symbol for hero",
+                "No symbol for didStuff",
+                "No symbol for heroThey",
+                "No symbol for didStuff",
+                "No symbol for heroThey",
+            ],
+        )
 
 
 class TestStrings(TestPytracery):
-
     def test_string_input(self):
         """The grammar should work properly if the input is a string rather
-           than a list"""
+        than a list"""
         # This errored in Py 3.5, taken straight from the README
         rules = {
-            'origin': '#hello.capitalize#, #location#!',
-            'hello': ['hello'],
-            'location': ['world']
+            "origin": "#hello.capitalize#, #location#!",
+            "hello": ["hello"],
+            "location": ["world"],
         }
 
         grammar = tracery.Grammar(rules)
@@ -376,9 +430,9 @@ class TestStrings(TestPytracery):
 
     def test_upper_and_lowercase(self):
         rules = {
-            'origin': '#hello.lowercase#, #location.uppercase#!',
-            'hello': ['Hello'],
-            'location': ['world']
+            "origin": "#hello.lowercase#, #location.uppercase#!",
+            "hello": ["Hello"],
+            "location": ["world"],
         }
 
         grammar = tracery.Grammar(rules)
@@ -387,7 +441,6 @@ class TestStrings(TestPytracery):
 
 
 class TestErrors(TestPytracery):
-
     def test_plaintext_short(self):
         # Arrange
         src = "a"
@@ -454,8 +507,14 @@ class TestErrors(TestPytracery):
         self.assertEqual(ret, "][][][][]]]")
         self.assertEqual(
             self.grammar.errors,
-            ["1: empty action", "1: empty action", "3: empty action",
-             "17: empty action", "too many ]"])
+            [
+                "1: empty action",
+                "1: empty action",
+                "3: empty action",
+                "17: empty action",
+                "too many ]",
+            ],
+        )
 
     def test_bracket_tag_melange(self):
         # Arrange
@@ -468,9 +527,17 @@ class TestErrors(TestPytracery):
         self.assertEqual(ret, "][][((None))][][[]]]]")
         self.assertEqual(
             self.grammar.errors,
-            ['unclosed tag', 'No symbol for None', 'No symbol for None',
-             '1: empty tag', '1: empty action', '10: empty tag',
-             'unclosed tag', 'too many ]'])
+            [
+                "unclosed tag",
+                "No symbol for None",
+                "No symbol for None",
+                "1: empty tag",
+                "1: empty action",
+                "10: empty tag",
+                "unclosed tag",
+                "too many ]",
+            ],
+        )
 
 
 if __name__ == "__main__":

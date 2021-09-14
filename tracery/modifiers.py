@@ -1,16 +1,16 @@
-def replace(text, *params):
+def replace(text: str, *params: str) -> str:
     return text.replace(params[0], params[1])
 
 
-def capitalizeAll(text, *params):
+def capitalizeAll(text: str, *params: str) -> str:
     return text.title()
 
 
-def capitalize_(text, *params):
+def capitalize_(text: str, *params: str) -> str:
     return text[0].upper() + text[1:]
 
 
-def a(text, *params):
+def a(text: str, *params: str) -> str:
     if len(text) > 0:
         if text[0] in "uU":
             if len(text) > 2:
@@ -21,12 +21,12 @@ def a(text, *params):
     return "a " + text
 
 
-def firstS(text, *params):
+def firstS(text: str, *params: str) -> str:
     text2 = text.split(" ")
     return " ".join([s(text2[0])] + text2[1:])
 
 
-def s(text, *params):
+def s(text: str, *params: str) -> str:
     if text[-1] in "shxSHX":
         return text + "es"
     elif text[-1] in "yY":
@@ -38,32 +38,33 @@ def s(text, *params):
         return text + "s"
 
 
-def ed(text, *params):
-    if text[-1] in "eE":
+def ed(text: str, *params: str) -> str:
+    if len(text)>0 and text[-1] in "eE":
         return text + "d"
-    elif text[-1] in "yY":
-        if text[-2] not in "aeiouAEIOU":
+    elif len(text)>1 and text[-1] in "yY" and text[-2] not in "aeiouAEIOU":
             return text[:-1] + "ied"
-    else:
+    elif len(text)>0:
         return text + "ed"
+    else:
+        return text
 
 
-def uppercase(text, *params):
+def uppercase(text: str, *params: str) -> str:
     return text.upper()
 
 
-def lowercase(text, *params):
+def lowercase(text: str, *params: str) -> str:
     return text.lower()
 
 
 base_english = {
-    'replace': replace,
-    'capitalizeAll': capitalizeAll,
-    'capitalize': capitalize_,
-    'a': a,
-    'firstS': firstS,
-    's': s,
-    'ed': ed,
-    'uppercase': uppercase,
-    'lowercase': lowercase
+    "replace": replace,
+    "capitalizeAll": capitalizeAll,
+    "capitalize": capitalize_,
+    "a": a,
+    "firstS": firstS,
+    "s": s,
+    "ed": ed,
+    "uppercase": uppercase,
+    "lowercase": lowercase,
 }
